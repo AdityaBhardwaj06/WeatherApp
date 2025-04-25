@@ -1,7 +1,10 @@
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Drawer } from "expo-router/drawer";
+import useWeatherStore from "../store/useWeatherStore";
 
 export default function Layout() {
+  const city = useWeatherStore((state) => state.weather?.city)
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer>
@@ -9,10 +12,10 @@ export default function Layout() {
           name="(tabs)"
           options={{
             drawerLabel: "Home",
-            headerTitle: "City", // removes text from the header
-            title: "hello", // removes text from the header
-            headerTransparent: true, // makes header background transparent
-            headerTitleAlign : "center"
+            headerTitle: city || "Home", // Use string fallback
+            title: city || "Home",       // Use string fallback
+            headerTransparent: true,
+            headerTitleAlign: "center"
           }}
         />
         <Drawer.Screen
@@ -20,8 +23,8 @@ export default function Layout() {
           options={{
             drawerLabel: "About",
             title: '', // removes text from the header
-    headerTransparent: true, // makes header background transparent
-    headerTitleStyle: { opacity: 0 }, // hides the title visually
+            headerTransparent: true,
+            headerTitleStyle: { opacity: 0 }
           }}
         />
       </Drawer>
