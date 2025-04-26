@@ -2,25 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useHeaderHeight } from '@react-navigation/elements';
-import {  } from '@react-navigation/elements';
 import { Snackbar } from 'react-native-paper';
+import { useRouter } from 'expo-router';
+import useWeatherStore from '../../../store/useWeatherStore';
 
 const STORAGE_KEY = '@recent_cities';
 
 const CityPage = () => {
   const headerHeight = useHeaderHeight();
+  const router = useRouter();
+  const fetchWeatherByCity = useWeatherStore(state => state.fetchWeatherByCity);
+
   const [searchText, setSearchText] = useState('');
   const [recentCities, setRecentCities] = useState([]);
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMsg, setSnackbarMsg] = useState('');
 
-  // Snackbar show helper
   const showError = (msg) => {
     setSnackbarMsg(msg);
     setSnackbarVisible(true);
   };
 
-  // Load recent cities from AsyncStorage on mount
   useEffect(() => {
     const loadRecentCities = async () => {
       try {
@@ -35,7 +37,6 @@ const CityPage = () => {
     loadRecentCities();
   }, []);
 
-  // Add city to recent searches (called on submit)
   const addCityToRecent = async (city) => {
     if (!city) return;
     try {
@@ -47,30 +48,34 @@ const CityPage = () => {
     }
   };
 
-  // Clear all recent searches
   const clearRecentCities = async () => {
     try {
       await AsyncStorage.removeItem(STORAGE_KEY);
       setRecentCities([]);
-      showError(' clear recent cities')
+      showError('Cleared recent cities');
     } catch (e) {
       showError('Failed to clear recent cities');
     }
   };
 
-  // Handle submit (Enter key)
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const city = searchText.trim();
     if (city) {
-      addCityToRecent(city);
+      await addCityToRecent(city);
       setSearchText('');
       Keyboard.dismiss();
+      await fetchWeatherByCity(city);
+      router.navigate('/(drawer)/(tabs)/'); // Go to Weather page
     }
+  };
+
+  const handleCityPress = async (city) => {
+    await fetchWeatherByCity(city);
+    router.navigate('/(drawer)/(tabs)/'); // Go to Weather page
   };
 
   return (
     <View style={[styles.container, { paddingTop: headerHeight }]}>
-      {/* Search Bar */}
       <TextInput
         style={styles.input}
         placeholder="Search city"
@@ -80,7 +85,6 @@ const CityPage = () => {
         returnKeyType="search"
       />
 
-      {/* Recent Search Label and Clear Button */}
       <View style={styles.recentHeaderRow}>
         <Text style={styles.recentLabel}>Recent Search</Text>
         <TouchableOpacity onPress={clearRecentCities}>
@@ -88,19 +92,19 @@ const CityPage = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Recently Displayed Cities */}
       <FlatList
         data={recentCities}
         keyExtractor={(item) => item}
         renderItem={({ item }) => (
           <View>
-            <Text style={styles.cityName}>{item}</Text>
+            <TouchableOpacity onPress={() => handleCityPress(item)}>
+              <Text style={styles.cityName}>{item}</Text>
+            </TouchableOpacity>
             <View style={styles.separator} />
           </View>
         )}
       />
 
-      {/* Snackbar for errors */}
       <Snackbar
         visible={snackbarVisible}
         onDismiss={() => setSnackbarVisible(false)}

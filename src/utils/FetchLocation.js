@@ -1,7 +1,7 @@
 // components/FetchLocation.js
 import React, { useEffect } from 'react';
 import * as Location from 'expo-location';
-import useLocationStore from '../app/store/useLocationStore';
+import useLocationStore from '../store/useLocationStore';
 
 
 const FetchLocation = () => {

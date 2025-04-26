@@ -1,6 +1,6 @@
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Drawer } from "expo-router/drawer";
-import useWeatherStore from "../store/useWeatherStore";
+import useWeatherStore from "../../store/useWeatherStore";
 
 export default function Layout() {
   const city = useWeatherStore((state) => state.weather?.city)

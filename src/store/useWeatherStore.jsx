@@ -1,13 +1,34 @@
 // weatherStore.js
 import { create } from 'zustand';
-import { MY_API_KEY } from '../../utils/WeatherAPIKey';
+import { MY_API_KEY } from '../utils/WeatherAPIKey';
 const API_KEY = MY_API_KEY;
+
+function getLocalDateParts(dt, timezone) {
+  // dt and timezone are in seconds, JavaScript Date expects ms
+  const utcMilliseconds = dt * 1000;
+  const offsetMilliseconds = timezone * 1000;
+  const localMilliseconds = utcMilliseconds + offsetMilliseconds;
+  const date = new Date(localMilliseconds);
+
+  // Extract parts
+  return {
+    day: date.getUTCDate(),
+    month: date.toLocaleString('default', { month: 'long', timeZone: 'UTC' }),
+    monthNum: date.getUTCMonth() + 1,
+    year: date.getUTCFullYear(),
+    hour: date.getUTCHours(),
+    minute: date.getUTCMinutes(),
+    second: date.getUTCSeconds(),
+    iso: date.toISOString(),
+    formattedDate: `${date.getUTCDate()} ${date.toLocaleString('default', { month: 'short', timeZone: 'UTC' })} ${date.getUTCFullYear()}`,
+  };
+}
 
 const useWeatherStore = create((set) => ({
   weather: null,
   loading: false,
   error: null,
-  lastUpdated: null,
+  lastUpdated: null, // { day, month, year, hour, minute, second, ... }
 
   // Fetch weather by coordinates
   fetchWeather: async (lat, lon) => {
@@ -20,7 +41,9 @@ const useWeatherStore = create((set) => ({
         throw new Error('Failed to fetch weather');
       }
       const data = await response.json();
-      console.log(data)
+      // Get local date parts from API response
+      const lastUpdated = getLocalDateParts(data.dt, data.timezone);
+
       set({
         weather: {
           temp: data.main.temp,
@@ -29,19 +52,18 @@ const useWeatherStore = create((set) => ({
           humidity: data.main.humidity,
           windSpeed: data.wind.speed,
           pressure: data.main.pressure,
-          city: data.name, // <-- use 'city' in BOTH functions
+          city: data.name,
         },
-        lastUpdated: new Date().toISOString(),
+        lastUpdated, // now contains all date/time parts
         loading: false,
         error: null,
       });
-      
     } catch (error) {
       set({ error: error.message, loading: false });
     }
   },
 
-  // Optionally, fetch weather by city name
+  // Fetch weather by city name
   fetchWeatherByCity: async (city) => {
     set({ loading: true, error: null });
     try {
@@ -52,6 +74,8 @@ const useWeatherStore = create((set) => ({
         throw new Error('Failed to fetch weather');
       }
       const data = await response.json();
+      const lastUpdated = getLocalDateParts(data.dt, data.timezone);
+
       set({
         weather: {
           temp: data.main.temp,
@@ -59,13 +83,13 @@ const useWeatherStore = create((set) => ({
           icon: data.weather[0].icon,
           humidity: data.main.humidity,
           windSpeed: data.wind.speed,
-          city: data.name, // <-- use 'city' in BOTH functions
+          pressure: data.main.pressure,
+          city: data.name,
         },
-        lastUpdated: new Date().toISOString(),
+        lastUpdated,
         loading: false,
         error: null,
       });
-
     } catch (error) {
       set({ error: error.message, loading: false });
     }
