@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MY_API_KEY } from '../utils/WeatherAPIKey';
+import { create } from "zustand";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { MY_API_KEY } from "../utils/WeatherAPIKey";
 const API_KEY = MY_API_KEY;
 
 function getLocalDateParts(dt, timezone) {
@@ -13,14 +13,17 @@ function getLocalDateParts(dt, timezone) {
   // Extract parts
   return {
     day: date.getUTCDate(),
-    month: date.toLocaleString('default', { month: 'long', timeZone: 'UTC' }),
+    month: date.toLocaleString("default", { month: "long", timeZone: "UTC" }),
     monthNum: date.getUTCMonth() + 1,
     year: date.getUTCFullYear(),
     hour: date.getUTCHours(),
     minute: date.getUTCMinutes(),
     second: date.getUTCSeconds(),
     iso: date.toISOString(),
-    formattedDate: `${date.getUTCDate()} ${date.toLocaleString('default', { month: 'short', timeZone: 'UTC' })} ${date.getUTCFullYear()}`,
+    formattedDate: `${date.getUTCDate()} ${date.toLocaleString("default", {
+      month: "short",
+      timeZone: "UTC",
+    })} ${date.getUTCFullYear()}`,
   };
 }
 
@@ -29,6 +32,25 @@ const useWeatherStore = create((set) => ({
   loading: false,
   error: null,
   lastUpdated: null, // { day, month, year, hour, minute, second, ... }
+  // Load last weather from AsyncStorage
+  loadLastWeather: async () => {
+    try {
+      const lastWeatherStr = await AsyncStorage.getItem("@last_weather");
+      if (lastWeatherStr) {
+        const { weather, lastUpdated } = JSON.parse(lastWeatherStr);
+        set({
+          weather,
+          lastUpdated,
+          loading: false,
+          error: null,
+        });
+        return weather?.city;
+      }
+    } catch (e) {
+      // Optionally handle error
+    }
+    return null;
+  },
 
   // Set weather directly (for restoring from storage)
   setWeather: (weatherObj, lastUpdatedObj) =>
@@ -47,7 +69,7 @@ const useWeatherStore = create((set) => ({
         `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`
       );
       if (!response.ok) {
-        throw new Error('Failed to fetch weather');
+        throw new Error("Failed to fetch weather");
       }
       const data = await response.json();
       const lastUpdated = getLocalDateParts(data.dt, data.timezone);
@@ -69,11 +91,14 @@ const useWeatherStore = create((set) => ({
       });
 
       // Save last city and weather to AsyncStorage
-      await AsyncStorage.setItem('@last_city', data.name);
-      await AsyncStorage.setItem('@last_weather', JSON.stringify({
-        weather: weatherObj,
-        lastUpdated,
-      }));
+      await AsyncStorage.setItem("@last_city", data.name);
+      await AsyncStorage.setItem(
+        "@last_weather",
+        JSON.stringify({
+          weather: weatherObj,
+          lastUpdated,
+        })
+      );
     } catch (error) {
       set({ error: error.message, loading: false });
     }
@@ -87,7 +112,7 @@ const useWeatherStore = create((set) => ({
         `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`
       );
       if (!response.ok) {
-        throw new Error('Failed to fetch weather');
+        throw new Error("Failed to fetch weather");
       }
       const data = await response.json();
       const lastUpdated = getLocalDateParts(data.dt, data.timezone);
@@ -109,34 +134,17 @@ const useWeatherStore = create((set) => ({
       });
 
       // Save last city and weather to AsyncStorage
-      await AsyncStorage.setItem('@last_city', data.name);
-      await AsyncStorage.setItem('@last_weather', JSON.stringify({
-        weather: weatherObj,
-        lastUpdated,
-      }));
+      await AsyncStorage.setItem("@last_city", data.name);
+      await AsyncStorage.setItem(
+        "@last_weather",
+        JSON.stringify({
+          weather: weatherObj,
+          lastUpdated,
+        })
+      );
     } catch (error) {
       set({ error: error.message, loading: false });
     }
-  },
-
-  // Load last weather from AsyncStorage
-  loadLastWeather: async () => {
-    try {
-      const lastWeatherStr = await AsyncStorage.getItem('@last_weather');
-      if (lastWeatherStr) {
-        const { weather, lastUpdated } = JSON.parse(lastWeatherStr);
-        set({
-          weather,
-          lastUpdated,
-          loading: false,
-          error: null,
-        });
-        return weather?.city;
-      }
-    } catch (e) {
-      // Optionally handle error
-    }
-    return null;
   },
 }));
 

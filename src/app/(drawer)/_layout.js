@@ -1,3 +1,5 @@
+/*  Drawer Layout */ 
+
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Drawer } from "expo-router/drawer";
 import useWeatherStore from "../../store/useWeatherStore";
@@ -12,8 +14,8 @@ export default function Layout() {
           name="(tabs)"
           options={{
             drawerLabel: "Home",
-            headerTitle: city || "Home", // Use string fallback
-            title: city || "Home",       // Use string fallback
+            headerTitle: city || "Home", // In case city name not available
+            title: city || "Home",       
             headerTransparent: true,
             headerTitleAlign: "center"
           }}
@@ -22,7 +24,7 @@ export default function Layout() {
           name="about"
           options={{
             drawerLabel: "About",
-            title: '', // removes text from the header
+            title: '',  // NO title for About page
             headerTransparent: true,
             headerTitleStyle: { opacity: 0 }
           }}

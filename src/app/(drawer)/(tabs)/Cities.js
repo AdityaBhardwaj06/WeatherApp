@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { Snackbar } from 'react-native-paper';
+import { Snackbar} from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import useWeatherStore from '../../../store/useWeatherStore';
 
@@ -18,7 +18,7 @@ const CityPage = () => {
   const [snackbarVisible, setSnackbarVisible] = useState(false);
   const [snackbarMsg, setSnackbarMsg] = useState('');
 
-  const showError = (msg) => {
+  const showSnackBar = (msg) => {
     setSnackbarMsg(msg);
     setSnackbarVisible(true);
   };
@@ -31,12 +31,13 @@ const CityPage = () => {
           setRecentCities(JSON.parse(storedCities));
         }
       } catch (e) {
-        showError('Failed to load recent cities');
+        showSnackBar('Failed to load recent cities');
       }
     };
     loadRecentCities();
   }, []);
 
+  // Using Async storage to save recent cities
   const addCityToRecent = async (city) => {
     if (!city) return;
     try {
@@ -44,20 +45,22 @@ const CityPage = () => {
       setRecentCities(updatedCities);
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedCities));
     } catch (e) {
-      showError('Failed to save city');
+      showSnackBar('Failed to save city');
     }
   };
 
+  // Function clearing Recent cities on clicking the clear text
   const clearRecentCities = async () => {
     try {
       await AsyncStorage.removeItem(STORAGE_KEY);
       setRecentCities([]);
-      showError('Cleared recent cities');
+      showSnackBar('Cleared recent cities');
     } catch (e) {
-      showError('Failed to clear recent cities');
+      showSnackBar('Failed to clear recent cities');
     }
   };
 
+  // Going to City's Weather on searching
   const handleSubmit = async () => {
     const city = searchText.trim();
     if (city) {
@@ -68,7 +71,7 @@ const CityPage = () => {
       router.navigate('/(drawer)/(tabs)/'); // Go to Weather page
     }
   };
-
+   // Going to City's Weather on clicking
   const handleCityPress = async (city) => {
     await fetchWeatherByCity(city);
     router.navigate('/(drawer)/(tabs)/'); // Go to Weather page
@@ -104,21 +107,24 @@ const CityPage = () => {
           </View>
         )}
       />
+        <Snackbar
+          visible={snackbarVisible}
+          onDismiss={() => setSnackbarVisible(false)}
+          style={{ marginBottom: 80  ,alignItems: 'center'}}
+          wrapperStyle={{ alignItems: 'center' }} 
+          duration={3000}
+          action={{
+            label: 'Dismiss',
+            onPress: () => setSnackbarVisible(false),
+          }}>
+          {snackbarMsg}
+        </Snackbar>
 
-      <Snackbar
-        visible={snackbarVisible}
-        onDismiss={() => setSnackbarVisible(false)}
-        duration={3000}
-        action={{
-          label: 'Dismiss',
-          onPress: () => setSnackbarVisible(false),
-        }}>
-        {snackbarMsg}
-      </Snackbar>
     </View>
   );
 };
 
+// Styling
 const styles = StyleSheet.create({
   container: {
     padding: 16,

@@ -1,4 +1,3 @@
-// components/FetchLocation.js
 import React, { useEffect } from 'react';
 import * as Location from 'expo-location';
 import useLocationStore from '../store/useLocationStore';
@@ -20,7 +19,7 @@ const FetchLocation = () => {
     })();
   }, []);
 
-  return null; // This component only fetches and stores location
+  return null; // This component only fetches and stores location hence return null
 };
 
 export default FetchLocation;

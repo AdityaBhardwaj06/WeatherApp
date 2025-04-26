@@ -1,3 +1,4 @@
+/*  First Stack Loading the Drawer*/ 
 import { Stack } from 'expo-router';
 
 export default function RootLayout() {

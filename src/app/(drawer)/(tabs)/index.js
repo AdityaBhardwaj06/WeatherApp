@@ -26,6 +26,7 @@ const weatherImages = {
 };
 
 export default function Page() {
+  // State manangement
   const headerHeight = useHeaderHeight();
   const { latitude, longitude } = useLocationStore();
   const {
@@ -35,13 +36,10 @@ export default function Page() {
     fetchWeatherByCity,
     loadLastWeather,
   } = useWeatherStore();
-
   const [refreshing, setRefreshing] = useState(false);
-
-  // 2. State for background image, default to 'clear'
   const [backgroundImage, setBackgroundImage] = useState(weatherImages.default);
 
-  // 3. Change background image based on weather condition
+  // Changing background depending opon weather conditions
   useEffect(() => {
     if (weather && weather.condition) {
       const key = weather.condition.toLowerCase();
@@ -49,7 +47,7 @@ export default function Page() {
     }
   }, [weather]);
 
-  // 4. On mount: Load last weather or fallback to device location
+  // On start eitgher Load last weather or fallback to device location
   useEffect(() => {
     (async () => {
       const lastCity = await loadLastWeather();
@@ -57,10 +55,9 @@ export default function Page() {
         fetchWeather(latitude, longitude);
       }
     })();
-    // eslint-disable-next-line
   }, [latitude, longitude]);
 
-  // 5. Pull-to-refresh: use city name if available, else location
+  // Function to refresh weather
   const onRefresh = async () => {
     setRefreshing(true);
     if (weather && weather.city) {

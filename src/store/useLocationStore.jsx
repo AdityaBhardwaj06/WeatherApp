@@ -1,4 +1,4 @@
-// store/useLocationStore.js
+/*Store file to save device location globally using Zustand */
 import { create } from 'zustand';
 
 const useLocationStore = create((set) => ({
