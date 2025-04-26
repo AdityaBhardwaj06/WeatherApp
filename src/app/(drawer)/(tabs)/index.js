@@ -16,9 +16,46 @@ import useWeatherStore from "../../../store/useWeatherStore";
 export default function Page() {
   const headerHeight = useHeaderHeight();
   const { latitude, longitude, success } = useLocationStore();
-  const { weather, lastUpdated, loading, error, fetchWeather } =
-    useWeatherStore();
+  const { weather, lastUpdated, fetchWeather, fetchWeatherByCity } = useWeatherStore();
   const [refreshing, setRefreshing] = useState(false);
+
+  // State for background image
+  const [backgroundImage, setBackgroundImage] = useState(require("C:/Users/Asus/WeatherApp/src/assets/clouds.jpeg"));
+
+  // Change background image based on weather condition
+  useEffect(() => {
+    if (weather && weather.condition) {
+      switch (weather.condition.toLowerCase()) {
+        case "clear":
+          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/clear.jpg"));
+          break;
+        case "haze":
+          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/haze.jpg"));
+          break;
+        case "snow":
+          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/snow.jpeg"));
+          break;
+        case "rain":
+          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/rain.jpeg"));
+          break;
+        case "clouds":
+          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/clouds.jpeg"));
+          break;
+        case "thunderstorm":
+          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/thunderstorm.jpg"));
+          break;
+        case "drizzle":
+          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/drizzle.jpeg"));
+          break;
+        case "fog":
+          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/fog.jpeg"));
+          break;
+        default:
+          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/clear.jpg"));
+          break;
+      }
+    }
+  }, [weather]);
 
   // Fetch weather when page mounts or location changes
   useEffect(() => {
@@ -27,10 +64,12 @@ export default function Page() {
     }
   }, [latitude, longitude]);
 
-  // Pull-to-refresh handler
+  // Pull-to-refresh handler: use city name if available, else location
   const onRefresh = async () => {
     setRefreshing(true);
-    if (latitude && longitude) {
+    if (weather && weather.city) {
+      await fetchWeatherByCity(weather.city);
+    } else if (latitude && longitude) {
       await fetchWeather(latitude, longitude);
     }
     setRefreshing(false);
@@ -50,14 +89,15 @@ export default function Page() {
     >
       <FetchLocation />
       <ImageBackground
-        source={require("C:/Users/Asus/WeatherApp/src/assets/clouds.jpeg")}
+        source={backgroundImage}
         style={[styles.background, { paddingTop: headerHeight }]}
         resizeMode="cover"
       >
-        
-        <Text style={styles.date}>{lastUpdated ?`${lastUpdated.formattedDate}` :`Loading...`}</Text>
+        <Text style={styles.date}>
+          {lastUpdated ? `${lastUpdated.formattedDate}` : `Loading...`}
+        </Text>
         <Text style={styles.bigTemperature}>
-          {weather?.temp !== undefined ? weather.temp : "--"}
+          {weather?.temp !== undefined ? Math.floor(weather.temp) : "--"}
         </Text>
         <Text style={styles.date}>{weather?.condition || "Loading..."}</Text>
 
@@ -97,17 +137,6 @@ export default function Page() {
               {weather?.pressure !== undefined ? weather.pressure : "--"}
             </Text>
           </View>
-        </View>
-
-        {/* Location info */}
-        <View>
-          {success ? (
-            <Text>
-              Lat: {latitude}, Lon: {longitude}
-            </Text>
-          ) : (
-            <Text>Location not available</Text>
-          )}
         </View>
       </ImageBackground>
     </ScrollView>
