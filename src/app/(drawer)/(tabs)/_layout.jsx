@@ -1,3 +1,4 @@
+/* TAbs Layout */
 import { Tabs } from "expo-router";
 import { FontAwesome5, MaterialCommunityIcons } from "@expo/vector-icons";
 
@@ -7,11 +8,11 @@ export default function TabsLayout() {
       screenOptions={{
         tabBarShowLabel: true,
         tabBarStyle: {
-          backgroundColor: "rgba(20,20,20,0.85)", // Spotify-like black translucent
+          backgroundColor: "rgba(20,20,20,0.85)", 
           borderTopWidth: 0,
           height: 64,
           position: "absolute",
-          elevation: 0, // no shadow
+          elevation: 0, 
         },
         tabBarActiveTintColor: "#bfa77a", 
         tabBarInactiveTintColor: "#fff", 

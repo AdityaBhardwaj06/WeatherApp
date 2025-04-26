@@ -32,6 +32,7 @@ const useWeatherStore = create((set) => ({
   loading: false,
   error: null,
   lastUpdated: null, // { day, month, year, hour, minute, second, ... }
+  
   // Load last weather from AsyncStorage
   loadLastWeather: async () => {
     try {
