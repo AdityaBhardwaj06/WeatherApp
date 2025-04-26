@@ -13,58 +13,54 @@ import useLocationStore from "../../../store/useLocationStore";
 import FetchLocation from "../../../utils/FetchLocation";
 import useWeatherStore from "../../../store/useWeatherStore";
 
+const weatherImages = {
+  clear: require("../../../assets/clear.jpg"),
+  haze: require("../../../assets/haze.jpg"),
+  snow: require("../../../assets/snow.jpeg"),
+  rain: require("../../../assets/rain.jpeg"),
+  clouds: require("../../../assets/clouds.jpeg"),
+  thunderstorm: require("../../../assets/thunderstorm.jpg"),
+  drizzle: require("../../../assets/drizzle.jpeg"),
+  fog: require("../../../assets/fog.jpeg"),
+  default: require("../../../assets/clear.jpg"),
+};
+
 export default function Page() {
   const headerHeight = useHeaderHeight();
-  const { latitude, longitude, success } = useLocationStore();
-  const { weather, lastUpdated, fetchWeather, fetchWeatherByCity } = useWeatherStore();
+  const { latitude, longitude } = useLocationStore();
+  const {
+    weather,
+    lastUpdated,
+    fetchWeather,
+    fetchWeatherByCity,
+    loadLastWeather,
+  } = useWeatherStore();
+
   const [refreshing, setRefreshing] = useState(false);
 
-  // State for background image
-  const [backgroundImage, setBackgroundImage] = useState(require("C:/Users/Asus/WeatherApp/src/assets/clouds.jpeg"));
+  // 2. State for background image, default to 'clear'
+  const [backgroundImage, setBackgroundImage] = useState(weatherImages.default);
 
-  // Change background image based on weather condition
+  // 3. Change background image based on weather condition
   useEffect(() => {
     if (weather && weather.condition) {
-      switch (weather.condition.toLowerCase()) {
-        case "clear":
-          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/clear.jpg"));
-          break;
-        case "haze":
-          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/haze.jpg"));
-          break;
-        case "snow":
-          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/snow.jpeg"));
-          break;
-        case "rain":
-          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/rain.jpeg"));
-          break;
-        case "clouds":
-          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/clouds.jpeg"));
-          break;
-        case "thunderstorm":
-          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/thunderstorm.jpg"));
-          break;
-        case "drizzle":
-          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/drizzle.jpeg"));
-          break;
-        case "fog":
-          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/fog.jpeg"));
-          break;
-        default:
-          setBackgroundImage(require("C:/Users/Asus/WeatherApp/src/assets/clear.jpg"));
-          break;
-      }
+      const key = weather.condition.toLowerCase();
+      setBackgroundImage(weatherImages[key] || weatherImages.default);
     }
   }, [weather]);
 
-  // Fetch weather when page mounts or location changes
+  // 4. On mount: Load last weather or fallback to device location
   useEffect(() => {
-    if (latitude && longitude) {
-      fetchWeather(latitude, longitude);
-    }
+    (async () => {
+      const lastCity = await loadLastWeather();
+      if (!lastCity && latitude && longitude) {
+        fetchWeather(latitude, longitude);
+      }
+    })();
+    // eslint-disable-next-line
   }, [latitude, longitude]);
 
-  // Pull-to-refresh handler: use city name if available, else location
+  // 5. Pull-to-refresh: use city name if available, else location
   const onRefresh = async () => {
     setRefreshing(true);
     if (weather && weather.city) {

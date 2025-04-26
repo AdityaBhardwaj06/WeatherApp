@@ -2,31 +2,49 @@
   "expo": {
     "name": "WeatherApp",
     "slug": "WeatherApp",
-    "scheme": "WeatherApp",
+    "scheme": "weatherapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "privacy": "public",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+       "runtimeVersion": "1.0.0",
+       "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      }
+        "backgroundColor": "#ffffff",
+         "runtimeVersion": "1.0.0"
+      },
+      "package": "com.bhardwajaditya.WeatherApp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router"
-    ]
+    ],
+    "runtimeVersion": "1.0.0",
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "196a86b5-737c-46dc-9c4e-4c0d021ee506"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/196a86b5-737c-46dc-9c4e-4c0d021ee506"
+    }
   }
 }
