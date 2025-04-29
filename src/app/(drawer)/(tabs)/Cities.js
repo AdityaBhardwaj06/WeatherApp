@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, FlatList, StyleSheet, TouchableOpacity, Keyboard } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useHeaderHeight } from '@react-navigation/elements';
-import { Snackbar} from 'react-native-paper';
+import { Snackbar } from 'react-native-paper';
 import { useRouter } from 'expo-router';
 import useWeatherStore from '../../../store/useWeatherStore';
 
@@ -11,7 +11,7 @@ const STORAGE_KEY = '@recent_cities';
 const CityPage = () => {
   const headerHeight = useHeaderHeight();
   const router = useRouter();
-  const fetchWeatherByCity = useWeatherStore(state => state.fetchWeatherByCity);
+  const { error, fetchWeatherByCity } = useWeatherStore();
 
   const [searchText, setSearchText] = useState('');
   const [recentCities, setRecentCities] = useState([]);
@@ -27,7 +27,7 @@ const CityPage = () => {
     const loadRecentCities = async () => {
       try {
         const storedCities = await AsyncStorage.getItem(STORAGE_KEY);
-        if (storedCities !== null) {
+        if (storedCities) {
           setRecentCities(JSON.parse(storedCities));
         }
       } catch (e) {
@@ -37,7 +37,7 @@ const CityPage = () => {
     loadRecentCities();
   }, []);
 
-  // Using Async storage to save recent cities
+  // Save recent cities
   const addCityToRecent = async (city) => {
     if (!city) return;
     try {
@@ -49,7 +49,7 @@ const CityPage = () => {
     }
   };
 
-  // Function clearing Recent cities on clicking the clear text
+  // Clear recent cities
   const clearRecentCities = async () => {
     try {
       await AsyncStorage.removeItem(STORAGE_KEY);
@@ -60,22 +60,33 @@ const CityPage = () => {
     }
   };
 
-  // Going to City's Weather on searching
   const handleSubmit = async () => {
     const city = searchText.trim();
     if (city) {
-      await addCityToRecent(city);
       setSearchText('');
       Keyboard.dismiss();
-      await fetchWeatherByCity(city);
-      router.navigate('/(drawer)/(tabs)/'); // Go to Weather page
+  
+      const success = await fetchWeatherByCity(city);
+      if (success) {
+        await addCityToRecent(city); // add city only if fetch succeeded
+        router.navigate('/(drawer)/(tabs)/'); 
+      } else {
+        showSnackBar('City not found or network error!');
+      }
     }
   };
-   // Going to City's Weather on clicking
+  
+
+  // Handle city press from list
   const handleCityPress = async (city) => {
-    await fetchWeatherByCity(city);
-    router.navigate('/(drawer)/(tabs)/'); // Go to Weather page
+    const success = await fetchWeatherByCity(city);
+    if (success) {
+      router.navigate('/(drawer)/(tabs)/');
+    } else {
+      showSnackBar('City not found or network error!');
+    }
   };
+  
 
   return (
     <View style={[styles.container, { paddingTop: headerHeight }]}>
@@ -97,7 +108,7 @@ const CityPage = () => {
 
       <FlatList
         data={recentCities}
-        keyExtractor={(item) => item}
+        keyExtractor={(item, idx) => item + idx}
         renderItem={({ item }) => (
           <View>
             <TouchableOpacity onPress={() => handleCityPress(item)}>
@@ -107,19 +118,18 @@ const CityPage = () => {
           </View>
         )}
       />
-        <Snackbar
-          visible={snackbarVisible}
-          onDismiss={() => setSnackbarVisible(false)}
-          style={{ marginBottom: 80  ,alignItems: 'center'}}
-          wrapperStyle={{ alignItems: 'center' }} 
-          duration={3000}
-          action={{
-            label: 'Dismiss',
-            onPress: () => setSnackbarVisible(false),
-          }}>
-          {snackbarMsg}
-        </Snackbar>
-
+      <Snackbar
+        visible={snackbarVisible}
+        onDismiss={() => setSnackbarVisible(false)}
+        style={{ marginBottom: 80, alignItems: 'center' }}
+        wrapperStyle={{ alignItems: 'center' }}
+        duration={3000}
+        action={{
+          label: 'Dismiss',
+          onPress: () => setSnackbarVisible(false),
+        }}>
+        {snackbarMsg}
+      </Snackbar>
     </View>
   );
 };

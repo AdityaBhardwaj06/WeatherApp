@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { MY_API_KEY } from "../utils/WeatherAPIKey";
+import { MY_API_KEY } from "../utils/WeatherAPIKey.env";
 const API_KEY = MY_API_KEY;
 
 function getLocalDateParts(dt, timezone) {
@@ -31,7 +31,7 @@ const useWeatherStore = create((set) => ({
   weather: null,
   loading: false,
   error: null,
-  lastUpdated: null, // { day, month, year, hour, minute, second, ... }
+  lastUpdated: null,  //(date and time)
   
   // Load last weather from AsyncStorage
   loadLastWeather: async () => {
@@ -48,7 +48,6 @@ const useWeatherStore = create((set) => ({
         return weather?.city;
       }
     } catch (e) {
-      // Optionally handle error
     }
     return null;
   },
@@ -105,7 +104,6 @@ const useWeatherStore = create((set) => ({
     }
   },
 
-  // Fetch weather by city name
   fetchWeatherByCity: async (city) => {
     set({ loading: true, error: null });
     try {
@@ -113,7 +111,14 @@ const useWeatherStore = create((set) => ({
         `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${API_KEY}`
       );
       if (!response.ok) {
-        throw new Error("Failed to fetch weather");
+        let msg = "Failed to fetch weather";
+        // Try to extract error message from API
+        try {
+          const errData = await response.json();
+          if (errData && errData.message) msg = errData.message;
+        } catch {}
+        set({ error: msg, loading: false });
+        return false;
       }
       const data = await response.json();
       const lastUpdated = getLocalDateParts(data.dt, data.timezone);
@@ -126,14 +131,14 @@ const useWeatherStore = create((set) => ({
         pressure: data.main.pressure,
         city: data.name,
       };
-
+  
       set({
         weather: weatherObj,
         lastUpdated,
         loading: false,
         error: null,
       });
-
+  
       // Save last city and weather to AsyncStorage
       await AsyncStorage.setItem("@last_city", data.name);
       await AsyncStorage.setItem(
@@ -143,10 +148,13 @@ const useWeatherStore = create((set) => ({
           lastUpdated,
         })
       );
+      return true;
     } catch (error) {
       set({ error: error.message, loading: false });
+      return false;
     }
   },
+  
 }));
 
 export default useWeatherStore;

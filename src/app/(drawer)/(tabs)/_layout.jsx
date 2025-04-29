@@ -34,7 +34,8 @@ export default function TabsLayout() {
           tabBarIcon: ({ color }) => (
             <FontAwesome5 name="cloud-sun" size={22} color={color} />
           ),
-          headerShown: false,
+          headerShown : false,
+          
         }}
       />
 

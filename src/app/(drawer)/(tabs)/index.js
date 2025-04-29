@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useHeaderHeight } from "@react-navigation/elements";
+import { Switch } from "react-native-paper";
 import useLocationStore from "../../../store/useLocationStore";
 import FetchLocation from "../../../utils/FetchLocation";
 import useWeatherStore from "../../../store/useWeatherStore";
@@ -25,8 +26,11 @@ const weatherImages = {
   default: require("../../../assets/clear.jpg"),
 };
 
+function celsiusToFahrenheit(celsius) {
+  return (celsius * 9) / 5 + 32;
+}
+
 export default function Page() {
-  // State manangement
   const headerHeight = useHeaderHeight();
   const { latitude, longitude } = useLocationStore();
   const {
@@ -38,8 +42,8 @@ export default function Page() {
   } = useWeatherStore();
   const [refreshing, setRefreshing] = useState(false);
   const [backgroundImage, setBackgroundImage] = useState(weatherImages.default);
+  const [isCelsius, setIsCelsius] = useState(true);
 
-  // Changing background depending opon weather conditions
   useEffect(() => {
     if (weather && weather.condition) {
       const key = weather.condition.toLowerCase();
@@ -47,7 +51,6 @@ export default function Page() {
     }
   }, [weather]);
 
-  // On start eitgher Load last weather or fallback to device location
   useEffect(() => {
     (async () => {
       const lastCity = await loadLastWeather();
@@ -57,7 +60,6 @@ export default function Page() {
     })();
   }, [latitude, longitude]);
 
-  // Function to refresh weather
   const onRefresh = async () => {
     setRefreshing(true);
     if (weather && weather.city) {
@@ -66,6 +68,13 @@ export default function Page() {
       await fetchWeather(latitude, longitude);
     }
     setRefreshing(false);
+  };
+
+  const displayTemp = () => {
+    if (weather?.temp === undefined) return "--";
+    return isCelsius
+      ? Math.floor(weather.temp)
+      : Math.floor(celsiusToFahrenheit(weather.temp));
   };
 
   return (
@@ -89,9 +98,21 @@ export default function Page() {
         <Text style={styles.date}>
           {lastUpdated ? `${lastUpdated.formattedDate}` : `Loading...`}
         </Text>
-        <Text style={styles.bigTemperature}>
-          {weather?.temp !== undefined ? Math.floor(weather.temp) : "--"}
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+          <Text style={styles.bigTemperature}>
+            {displayTemp()}
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center", marginLeft: 10 }}>
+            <Text style={{ fontSize: 24, color: "#a26b1f", fontWeight: "bold" }}>
+              {isCelsius ? "°C" : "°F"}
+            </Text>
+            <Switch
+              value={!isCelsius}
+              onValueChange={() => setIsCelsius((prev) => !prev)}
+              color="#a26b1f"
+            />
+          </View>
+        </View>
         <Text style={styles.date}>{weather?.condition || "Loading..."}</Text>
 
         <View style={styles.iconRowContainer}>

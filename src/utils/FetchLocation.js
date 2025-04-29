@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import * as Location from 'expo-location';
 import useLocationStore from '../store/useLocationStore';
 
